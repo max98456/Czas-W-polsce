@@ -20,10 +20,6 @@
             font-size: 2rem;
             margin-bottom: 10px;
         }
-        #nano {
-            font-size: 1.5rem;
-            color: #ffcc00;
-        }
         footer {
             position: fixed;
             bottom: 10px;
@@ -37,16 +33,26 @@
 <body>
 
     <h1>Aktualny czas w Polsce</h1>
-    <div id="clock"></div>
-    <div id="nano"></div>
+    <div id="clock">Ładowanie...</div>
 
     <footer>
         © <span id="year"></span>, max98456
     </footer>
 
     <script>
-        function updateTime() {
-            const now = new Date();
+        async function getServerTime() {
+            try {
+                const response = await fetch("https://worldtimeapi.org/api/timezone/Europe/Warsaw");
+                const data = await response.json();
+                return new Date(data.utc_datetime);
+            } catch (error) {
+                console.error("Błąd pobierania czasu z serwera:", error);
+                return new Date(); // Awaryjnie lokalny czas
+            }
+        }
+
+        async function updateTime() {
+            const now = await getServerTime();
             const days = ["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"];
             const months = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"];
 
@@ -59,13 +65,10 @@
             const seconds = now.getSeconds().toString().padStart(2, '0');
             const milliseconds = now.getMilliseconds().toString().padStart(3, '0');
 
-            const nanoseconds = performance.now().toFixed(6).split(".")[1]; // Przybliżona wartość
-
             document.getElementById("clock").innerHTML = `${dayOfWeek}, ${day} ${month} ${year} | ${hours}:${minutes}:${seconds}:${milliseconds}`;
-            document.getElementById("nano").innerHTML = `Nanosekundy: ${nanoseconds}`;
         }
 
-        setInterval(updateTime, 1);
+        setInterval(updateTime, 1000);
         updateTime();
 
         document.getElementById("year").textContent = new Date().getFullYear();
